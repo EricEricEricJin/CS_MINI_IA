@@ -6,11 +6,11 @@ KEY_COLON = 58
 KEY_ENTER = 10
 KEY_ESC = 27
 
+KEY_CTRL_W = 23
+
 # KEY A - Z: 65-90
 # KEY a - z: 97 - 122
 # KEY 0-9: 48-57
-
-
 
 
 class CLI:
@@ -26,6 +26,17 @@ class CLI:
             "delfriend": self._cmd_delfriend
         }
 
+        self.msg_data = [
+            {"username": "a"}
+        ]
+
+        self.normal_left_curs = 0
+        self.normal_left_offset = 0
+
+        self.normal_right_offset = 0
+        self.normal_right_curs = 0
+        
+
         self.active_win = "left"
 
     def _init_win(self):
@@ -38,7 +49,11 @@ class CLI:
         self.bottom_win = self.main_win.subwin(1, self.win_size[1], self.win_size[0] - 1, 0)
 
     def run(self):
-        pass
+        while True:
+            key = self.main_win.getch()
+            if key == ord("a"):
+                pass
+
 
     def _bottom_line_mode(self):
         self.bottom_win.clear()
@@ -69,10 +84,35 @@ class CLI:
             return 0
 
     def _normal_mode(self):
-        pass
+        while True:
+            self.main_win.clear()
+
+            key = self.main_win.getch()
+            if key == KEY_CTRL_W:
+                self.active_win = "right" if self.active_win == "left" else "left"
+            
 
     def _insert_mode(self):
         pass
+
+    def _normal_refresh(self):
+        # Display the self.msg_list in main win
+        for i in range(self.win_size[0] - 10):
+            un_str = ""
+            if self.normal_left_curs - self.normal_left_offset == i:
+                un_str += "> "
+            else:
+                un_str += "  "
+            if i + self.normal_left_offset >= len(self.msg_data):
+                break
+            else:
+                un_str += self.msg_data[self.normal_left_offset + i]["username"]
+            self.left_win.addstr(i + 5, 0, un_str)
+
+        if self.normal_left_curs < len(self.msg_data):
+            current_msg = self.msg_data[self.normal_left_curs + self.normal_left_offset]["message"]
+            # current_msg: [["me", xx], "friend", xx]
+            pass
 
 
 

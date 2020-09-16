@@ -24,4 +24,4 @@ ________________________
     - `signout`
     - `signup`
     - `addfriend`
-    - `delfriend`
+     - `delfriend`

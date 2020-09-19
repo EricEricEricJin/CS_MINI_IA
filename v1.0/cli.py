@@ -14,9 +14,6 @@ KEY_CTRL_W = 23
 
 
 class CLI:
-
-    
-
     def __init__(self):
         self.CMD2FUNC_TABLE = {
             "signin": self._cmd_signin,
@@ -131,3 +128,39 @@ class CLI:
     def _cmd_delfriend(self):
         pass
         
+
+
+
+class leftWin:
+    def __init__(self):
+        self.offset = 0
+        self.cursor = 0
+        self.all_list = []
+        self.display_list = []
+
+    def key_press(self, key):
+        # if key == j then cursor += 1
+        # if key == k then cursor -= 1
+        pass
+
+    def current_cursor(self):
+        pass
+        # return current cursor
+
+    def refresh(self):
+        pass
+
+
+class rightWin:
+    def __init__(self):
+        pass
+
+    def key_press(self, key):
+        pass
+
+    def refresh(self):
+        pass
+
+
+class bottomWin:
+    pass

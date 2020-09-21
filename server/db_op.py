@@ -58,6 +58,14 @@ class dbOp:
         except:
             return 0
 
+    def get_max_userid(self):
+        try:
+            data = self.cursor.execute("SELECT MAX(ID) from AUT")
+            for row in data:
+                return row[0]
+        except:
+            return 0
+
 
     def delete_allusertable(self, user_id):
         try:
@@ -109,13 +117,14 @@ class dbOp:
         try:
             self.cursor.execute(
                 """
-                    INSERT INTO {} (SENSER_ID, MSG)
-                    VALUES ({}, '{}')
+                    INSERT INTO {} (SENDER_ID, MSG)
+                    VALUES ({}, "{}")
                 """.format(table_name, sender_id, msg)
             )
             self.conn.commit()
             return 1
-        except:
+        except Exception as e:
+            print(e)
             return 0
 
     def query_msgtable(self, user_id):
@@ -128,7 +137,7 @@ class dbOp:
                 data_list.append(
                     {"SENDER_ID": row[0], "TIME": row[1], "MSG": row[2]}
                 )
-            return data
+            return data_list
         except:
             return None
 
@@ -229,13 +238,26 @@ class dbOp:
         except:
             return 0
 
-    
+    def query_friendrequesttable(self, user_id):
+        table_name = "FR" + str(user_id)
+        data_list = []
+        try:
+            data = self.cursor.execute("SELECT FRI_ID, REQ_NOTE from {}".format(table_name))
+            for row in data:
+                data_list.append({"FRI_ID": row[0], "REQ_NOTE": row[1]})
+            return data_list
+        except:
+            return None
+
 
     def delete_friendrequesttable(self, user_id, friend_id):
         table_name = "FR" + str(user_id)
         try:
-            self.cursor.execute("DELETE from {} where FRI_ID = {}".format(user_id, friend_id))
+            self.cursor.execute("DELETE from {} where FRI_ID = {}".format(table_name, friend_id))
             self.conn.commit()
             return 1
         except:
             return 0
+
+    def __del__(self):
+        self.conn.close()

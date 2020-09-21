@@ -1,63 +1,205 @@
 from db_op import dbOp
 from threading import Thread
+from functools import wraps
+
+def debug(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        print("== Start func", f.__name__, "==")
+        rt  = f(*args, **kwargs)
+        print("== Return", rt, "==")
+        return rt
+    return decorated
+
+
+
 
 class Service:
+    @debug
     def __init__(self, sock_conn):
-        self.db_op_ins = dbOp("test.db")
         self.sock_conn = sock_conn
         self.user_id = None
 
+        self.MODE2FUNC = {
+            "sign_up": self._sign_up,
+            "sign_in": self._sign_in,
+            "sign_out": self._sign_out,
+            "add_friend": self._add_friend,
+            "del_friend": self._del_friend,
+            "accept_friend": self._accept_friend,
+            "refuse_friend": self._refuse_friend,
+            "send_msg": self._send_msg,
+            "refresh": self._refresh
+        }
+
+        self.recv_decoded = {}
+
+    @debug
     def start(self):
         t = Thread(target = self._service)
         t.start()
 
+    @debug
     def _service(self):
+        self.db_op_ins = dbOp("test.db")
+
         while True:
-            recv_raw = self.sock_conn.recv(1024)
-            recv_decoded = eval(recv_raw.decode())
-            mode = recv_decoded["mode"]
+            recv_raw = self.sock_conn.recv(4096)
+            try:
+                self.recv_decoded = eval(recv_raw.decode())
+            except Exception as e:
+                print("_service_run_error", e, "recv", recv_raw)
 
-            if mode == "sign_up":
-                try:
-                    user_name = recv_decoded["name"]
-                    password = recv_decoded["pwd"]
+            mode = self.recv_decoded["mode"]
 
-                    user_id = self.db_op_ins.get_max_userid() + 1
-
-                    self.db_op_ins.insert_allusertable(user_id, user_name, password, 0)
-                    self.db_op_ins.create_msgtable(user_id)
-                    self.db_op_ins.create_friendlisttable(user_id)
-                    self.db_op_ins.create_friendrequesttable(user_id)
-
-                    self.sock_conn.send(str(user_id).encode())
-                except:
-                    self.sock_conn.send(b"0")
-
-            elif mode == "sign_in":
-                user_id = recv_decoded["id"]
-                self.user_id = user_id
-                password = recv_decoded["pwd"]
-
-
-                db_q_dict = self.db_op_ins.query_allusertable(user_id)
-                if db_q_dict["PASSWD"] == password:
-                    # correct
-                    self.sock_conn.send(db_q_dict["USERNAME"].encode())
-                    pass
-                else:
-                    self.sock_conn.send(b"0")
-
-            elif mode == "sign_out":
-                self.db_op_ins.update_allusertable()
-
-            elif mode == "add_friend":
-                pass
-
-            elif mode == "del_friend":
-                pass
-
-            elif "mode" == "send_msg":
-                pass
+            if mode in self.MODE2FUNC:
+                self.MODE2FUNC[mode]()
+            else:
+                self.sock_conn.send(b"0")
+            if mode == "sign_out":
+                break
 
         self.sock_conn.close()
         del self.db_op_ins
+
+    @debug
+    def _sign_up(self):
+        try:
+            user_name = self.recv_decoded["name"]
+            password = self.recv_decoded["pwd"]
+
+            curr_max_id = self.db_op_ins.get_max_userid()
+            if curr_max_id == None:
+                user_id = 1
+            else:
+                user_id = curr_max_id + 1
+
+            self.db_op_ins.insert_allusertable(user_id, user_name, password, 0)
+            self.db_op_ins.create_msgtable(user_id)
+            self.db_op_ins.create_friendlisttable(user_id)
+            self.db_op_ins.create_friendrequesttable(user_id)
+
+            self.sock_conn.send(str(user_id).encode())
+
+            return 1
+        except Exception as e:
+            print(e)
+            self.sock_conn.send(b"0")
+            return 0
+            
+
+
+    @debug
+    def _sign_in(self):
+        try:
+            self.user_id = self.recv_decoded["id"]
+            password = self.recv_decoded["pwd"]
+
+            print("id", self.user_id, "pwd", password)
+
+
+            db_q_dict = self.db_op_ins.query_allusertable(self.user_id)
+            print("db_q_dict", db_q_dict)
+
+            if db_q_dict["PASSWD"] == password:
+                # correct send username
+                self.sock_conn.send(db_q_dict["USERNAME"].encode())
+                return 1
+            else:
+                self.sock_conn.send(b"0")
+                return 0
+        except:
+            self.sock_conn.send(b"0")
+            return 0
+
+
+    @debug
+    def _sign_out(self):
+        try:
+            self.db_op_ins.update_allusertable(self.user_id, "LOGIN_STATUS", 0)
+            self.sock_conn.send(b"1")
+            return 1
+        except:
+            self.sock_conn.send(b"0")
+            return 0
+
+    @debug
+    def _add_friend(self):
+        try:
+            self.db_op_ins.insert_friendrequesttable(self.recv_decoded["friend_id"], self.user_id, self.recv_decoded["req_note"])
+            self.sock_conn.send(b"1")
+            return 1
+        except:
+            self.sock_conn.send(b"0")
+            return 0
+        
+
+    @debug
+    def _del_friend(self):
+        try:
+            self.db_op_ins.delete_friendlisttable(self.user_id, self.recv_decoded["friend_id"])
+            self.sock_conn.send(b"1")
+            return 1
+        except:
+            self.sock_conn.send(b"0")
+            return 0
+
+    @debug
+    def _accept_friend(self):
+        try:
+            self.db_op_ins.insert_friendlisttable(self.user_id, self.recv_decoded["friend_id"])
+            self.db_op_ins.insert_friendlisttable(self.recv_decoded["friend_id"], self.user_id)
+            self.db_op_ins.delete_friendrequesttable(self.user_id, self.recv_decoded["friend_id"])
+            self.sock_conn.send(b"1")
+            return 1
+        except:
+            self.sock_conn.send(b"0")
+            return 0
+
+    @debug
+    def _refuse_friend(self):
+        try:
+            self.db_op_ins.delete_friendrequesttable(self.user_id, self.recv_decoded["friend_id"])
+            self.sock_conn.send(b"1")
+            return 1
+        except:
+            self.sock_conn.send(b"0")
+            return 0
+
+    @debug
+    def _send_msg(self):
+        try:
+            self.db_op_ins.insert_msgtable(self.recv_decoded["friend_id"], self.user_id, self.recv_decoded["msg"])
+            self.sock_conn.send(b"1")
+            return 1
+        except:
+            self.sock_conn.send(b"0")
+            return 0
+
+    @debug
+    def _refresh(self):
+        # return msg, frl, fl
+        # {"msg": [[sender, send_t, msg], [], ...], "freq": [[friend_id, req_note], [], ...], "friend": [[friend_id, friend_username, login_status], [], ...]}
+
+        try:
+            message = list(self.db_op_ins.query_msgtable(self.user_id))
+            friend_req = list(self.db_op_ins.query_friendrequesttable(self.user_id))
+            friends = list(self.db_op_ins.query_friendlisttable(self.user_id))
+
+            message = [list(message[i].values()) for i in range(len(message))]
+            friend_req = [list(friend_req[i].values()) for i in range(len(friend_req))]
+            friends = [list(friends[i].values()) for i in range(len(friends))]
+
+            data = {"msg": message, "freq": friend_req, "friend": friends}
+
+            self.sock_conn.send(str(data).encode())
+            
+            return 1
+        except:
+            self.sock_conn.send(b"0")
+            return 0
+
+
+        pass
+
+

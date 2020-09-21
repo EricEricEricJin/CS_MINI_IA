@@ -54,8 +54,10 @@ class dbOp:
                 """.format(user_id, user_name, passwd, login_status)
             )
             self.conn.commit()
+            print("insert into all user table")
             return 1
-        except:
+        except Exception as e:
+            print(e)
             return 0
 
     def get_max_userid(self):

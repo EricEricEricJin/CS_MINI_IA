@@ -13,4 +13,4 @@ class sockCom:
         self.sock.send(bin_data)
 
     def recv(self):
-        return self.sock.recv(1024)
+        return self.sock.recv(4096)

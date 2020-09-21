@@ -69,13 +69,13 @@ class logicProc:
 
         pass
 
-    def add_friend(self, friend_id):
+    def add_friend(self, friend_id, req_note):
         # if success:
         #     return 1
         # else:
         #     return 0
         
-        data = {"mode": "add_friend", "friend_id": friend_id}
+        data = {"mode": "add_friend", "friend_id": friend_id, "req_note": req_note}
         self.sockCom_ins.send(str(data).encode())
         recv_raw = self.sockCom_ins.recv()
         if recv_raw == b"1":

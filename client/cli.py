@@ -32,7 +32,7 @@ class CLI:
                 friend_id = input("Friend id: ")
                 print(self.LP_ins.del_friend(friend_id))
 
-            elif in_str == "sendmeg":
+            elif in_str == "sendmsg":
                 friend_id = input("Friend id")
                 msg = input("Message: ")
                 print(self.LP_ins.send_message(friend_id, msg))

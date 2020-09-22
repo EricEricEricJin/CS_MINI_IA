@@ -1,4 +1,5 @@
 import sqlite3
+
 # DATABASE STRUCTURE
 # ALL_USER Table:
 #   ID INT PRIMARY KEY NOT NULL, 
@@ -18,6 +19,8 @@ import sqlite3
 # FRIEND_REQUEST"USERID" Table:
 #   FRIEND_ID INT NOT NULL,
 #   REQ_NOTE TEXT,
+
+# TODO `TEXT` in DB do not support ' 
 
 
 class dbOp:
@@ -67,7 +70,6 @@ class dbOp:
                 return row[0]
         except:
             return 0
-
 
     def delete_allusertable(self, user_id):
         try:
@@ -143,7 +145,6 @@ class dbOp:
         except:
             return None
 
-
     def erase_msgtable(self, user_id):
         table_name = "MSG" + str(user_id)
         try:
@@ -206,7 +207,6 @@ class dbOp:
         except:
             return 0
 
-
     # ========== Friend Request Table ==========
 
     def create_friendrequesttable(self, user_id):
@@ -250,7 +250,6 @@ class dbOp:
             return data_list
         except:
             return None
-
 
     def delete_friendrequesttable(self, user_id, friend_id):
         table_name = "FR" + str(user_id)

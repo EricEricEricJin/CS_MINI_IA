@@ -107,3 +107,11 @@ class logicProc:
             return 1
         else:
             return 0
+
+    def refresh(self):
+        self.sockCom_ins.send(str({"mode": "refresh"}).encode())
+        recv_raw = self.sockCom_ins.recv()
+        if recv_raw == b"0":
+            return 0
+        else:
+            return eval(recv_raw)

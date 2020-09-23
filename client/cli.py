@@ -35,7 +35,7 @@ class CLI:
             elif in_str == "sendmsg":
                 friend_id = input("Friend id")
                 msg = input("Message: ")
-                print(self.LP_ins.send_message(friend_id, msg))
+                print(self.LP_ins.send_message(friend_id, msg)
 
 
 if __name__ == "__main__":

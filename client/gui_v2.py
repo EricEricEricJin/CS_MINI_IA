@@ -1,5 +1,8 @@
 from tkinter import *
-from logic_proc import *
+
+# from logic_proc import *
+from fake_logic_proc import *
+
 from tkinter.ttk import *
 
 
@@ -193,11 +196,13 @@ class GUI:
         all_friends_tree.column("#2", width = int(AF_WIN_W / 3))
         all_friends_tree.column("#3", width = int(AF_WIN_W / 3))
 
-        for fri_id in list(self.friend_list.keys()):
+        # for fri_id in list(self.friend_list.keys()):
+        for i in range(len(self.friend_list)):
+            fri_id = list(self.friend_list[i].keys())[0]
             all_friends_tree.insert("", "end", values = [
                 fri_id,
-                self.friend_list[fri_id][0],
-                self.friend_list[fri_id][1]
+                self.friend_list[i][fri_id][0],
+                self.friend_list[i][fri_id][1]
             ])
         
         all_friends_tree.pack()
@@ -231,8 +236,11 @@ class GUI:
         friend_req_tree.column("#1", width = int(FR_WIN_W / 2))
         friend_req_tree.column("#2", width = int(FR_WIN_W / 2))
 
-        for fri_id in list(self.friend_req_list.keys()): # []
-            friend_req_tree.insert("", "end", values = [fri_id, self.friend_req_list[fri_id]])
+        # for fri_id in list(self.friend_req_list.keys()): # []
+        for i in range(len(self.friend_req_list)):
+            fri_id = list(self.friend_req_list[i].keys())[0]
+
+            friend_req_tree.insert("", "end", values = [fri_id, self.friend_req_list[i][fri_id]])
 
         def _select_react(event):
             selected = event.widget.selection()[0]

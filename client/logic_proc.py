@@ -1,4 +1,5 @@
 from sock_com import sockCom
+from db_op import dbOp
 
 ONLINE = 1
 OFFLINE = 0
@@ -99,6 +100,15 @@ class logicProc:
             return 0
         pass
 
+
+    def accept_friend(self, friend_id):
+        return 1
+
+    def refuse_friend(self, friend_id):
+        return 1
+        
+
+
     def send_message(self, friend_id, msg):
         data = {"mode": "send_msg", "friend_id": friend_id, "msg": msg}
         self.sockCom_ins.send(str(data).encode())
@@ -109,6 +119,12 @@ class logicProc:
             return 0
 
     def refresh(self):
+        # Put new messages into database
+        # Fatch ALL from data base
+        # return
+        # {"msg": [[sender, send_t, msg], [], ...], "freq": [[friend_id, req_note], [], ...], "friend": [[friend_id, friend_username, login_status], [], ...]}
+        # 
+
         self.sockCom_ins.send(str({"mode": "refresh"}).encode())
         recv_raw = self.sockCom_ins.recv()
         if recv_raw == b"0":

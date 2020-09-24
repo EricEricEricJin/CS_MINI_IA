@@ -11,7 +11,6 @@ def debug(f):
         return rt
     return decorated
 
-
 class Service:
     @debug
     def __init__(self, sock_conn):
@@ -27,10 +26,14 @@ class Service:
             "accept_friend": self._accept_friend,
             "refuse_friend": self._refuse_friend,
             "send_msg": self._send_msg,
-            "refresh": self._refresh
+            "refresh": self._refresh,
+            "close_sock": self._close_sock,
         }
 
         self.recv_decoded = {}
+        self.login_status = False
+
+        self.do_serve = True
 
     @debug
     def start(self):
@@ -41,21 +44,22 @@ class Service:
     def _service(self):
         self.db_op_ins = dbOp("test.db")
 
-        while True:
-            recv_raw = self.sock_conn.recv(4096)
+        while self.do_serve:
             try:
-                self.recv_decoded = eval(recv_raw.decode())
-            except Exception as e:
-                print("_service_run_error", e, "recv", recv_raw)
+                recv_raw = self.sock_conn.recv(4096)
+                try:
+                    self.recv_decoded = eval(recv_raw.decode())
+                except Exception as e:
+                    print("_service_run_error", e, "recv", recv_raw)
 
-            mode = self.recv_decoded["mode"]
+                mode = self.recv_decoded["mode"]
 
-            if mode in self.MODE2FUNC:
-                self.MODE2FUNC[mode]()
-            else:
-                self.sock_conn.send(b"0")
-            if mode == "sign_out":
-                break
+                if (mode in self.MODE2FUNC) and (mode == "sign_in" or self.login_status):
+                    self.MODE2FUNC[mode]()
+                else:
+                    self.sock_conn.send(b"0")
+            except:
+                break 
 
         self.sock_conn.close()
         del self.db_op_ins
@@ -97,6 +101,7 @@ class Service:
                 self.user_id = user_id
                 # correct send username
                 self.db_op_ins.update_allusertable(self.user_id, "LOGIN_STATUS", 1)
+                self.login_status = True
                 self.sock_conn.send(db_q_dict["USERNAME"].encode())
                 return 1
             else:
@@ -110,6 +115,7 @@ class Service:
     def _sign_out(self):
         try:
             self.db_op_ins.update_allusertable(self.user_id, "LOGIN_STATUS", 0)
+            self.login_status = False
             self.sock_conn.send(b"1")
             return 1
         except:
@@ -119,7 +125,7 @@ class Service:
     @debug
     def _add_friend(self):
         try:
-            self.db_op_ins.insert_friendrequesttable(self.recv_decoded["friend_id"], self.user_id, self.recv_decoded["req_note"])
+            self.db_op_ins.insert_friendrequesttable(self.user_id, self.recv_decoded["friend_id"], self.recv_decoded["req_note"])
             self.sock_conn.send(b"1")
             return 1
         except:
@@ -184,11 +190,47 @@ class Service:
             friend_req = list(self.db_op_ins.query_friendrequesttable(self.user_id))
             friends = list(self.db_op_ins.query_friendlisttable(self.user_id))
 
-            message = [list(message[i].values()) for i in range(len(message))]
-            friend_req = [list(friend_req[i].values()) for i in range(len(friend_req))]
-            friends = [[friends[i], self.db_op_ins.query_allusertable(friends[i])["USERNAME"], self.db_op_ins.query_allusertable(friends[i])["LOGIN_STATUS"]] for i in range(len(friends))]
+            # message = [list(message[i].values()) for i in range(len(message))]
+            # msg_data = {}
+            # for i in range(len(message)):
+            #     sender_id = ess
+            #     msg_data_of_this_sender = []
 
-            data = {"msg": message, "freq": friend_req, "friend": friends}
+            #     msg_data.update({
+            #         message[i]["SENDER_ID"]: 
+            #     })
+            # friend_req = [list(friend_req[i].values()) for i in range(len(friend_req))]
+            # friends = [[friends[i], self.db_op_ins.query_allusertable(friends[i])["USERNAME"], self.db_op_ins.query_allusertable(friends[i])["LOGIN_STATUS"]] for i in range(len(friends))]
+
+            msg_data = {}
+            freq_data = {}
+            friend_data = {}
+
+            for i in range(len(message)):
+                sender_id = message[i]["SENDER_ID"]
+                if sender_id in msg_data:
+                    msg_data[sender_id].append(
+                        [True, message[i]["TIME"], message[i]["MSG"]]
+                    )
+                else:
+                    msg_data.update({
+                        sender_id: [[True, message[i]["TIME"], message[i]["MSG"]]]
+                    })
+
+            for i in range(len(friends)):
+                friend_info = self.db_op_ins.query_allusertable(friends[i])
+                friend_data.update({
+                    friends[i]: [
+                        friend_info["USERNAME"], friend_info["LOGIN_STATUS"] 
+                    ]
+                })
+
+            for i in range(len(friend_req)):
+                freq_data.update({
+                    friend_req[i]["FRI_ID"]: friend_req[i]["REQ_NOTE"]
+                })
+
+            data = {"msg": msg_data, "freq": freq_data, "friend": friend_data}
 
             self.sock_conn.send(str(data).encode())
 
@@ -199,3 +241,7 @@ class Service:
             print(e)
             self.sock_conn.send(b"0")
             return 0
+
+    @debug
+    def _close_sock(self):
+        self.do_serve = False

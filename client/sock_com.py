@@ -14,3 +14,6 @@ class sockCom:
 
     def recv(self):
         return self.sock.recv(4096)
+
+    def __del__(self):
+        self.sock.close()

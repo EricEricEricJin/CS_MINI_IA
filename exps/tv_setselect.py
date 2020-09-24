@@ -2,8 +2,9 @@ from tkinter import *
 from tkinter.ttk import *
 
 def react(event):
-    item = tv.selection()
-    print(tv.item(item)["values"])
+    selected = event.widget.selection()[0]
+    print(selected)
+    print(tv.item(selected))
 
 root = Tk()
 
@@ -15,7 +16,9 @@ tv.heading("#1", text = "b")
 tv.column("#0")
 tv.column("#1")
 
-tv.insert("", "end", values = [111,222])
+item = tv.insert("", "end", values = [111,222])
 tv.bind("<<TreeviewSelect>>", react)
 
+tv.selection_set(item)
 root.mainloop()
+

@@ -29,7 +29,7 @@ class logicProc:
             # failed
             return 0
         else:
-            return eval(recv_raw.decode())
+            return recv_raw.decode()
         pass
 
     def sign_in(self, user_id, passwd):
@@ -50,8 +50,6 @@ class logicProc:
             self.login_status = ONLINE
             return 1
 
-        pass
-
     def sign_out(self):
         # if success:
         #     self.login_status = OFFLINE
@@ -60,7 +58,7 @@ class logicProc:
         #     return 1
         # else:
         #     return 0
-        self.sockCom_ins.send(b"sign_out")
+        self.sockCom_ins.send(str({"mode": "sign_out"}).encode())
         recv_raw = self.sockCom_ins.recv()
 
         if recv_raw == b"0":
@@ -100,15 +98,26 @@ class logicProc:
             return 0
         pass
 
-
     def accept_friend(self, friend_id):
-        return 1
+        data = {"mode": "accept_friend", "friend_id": friend_id}
+        self.sockCom_ins.send(str(data).encode())
+
+        recv_raw = self.sockCom_ins.recv()
+        if recv_raw == b"1":
+            return 1
+        else:
+            return 0
 
     def refuse_friend(self, friend_id):
-        return 1
+        data = {"mode": "refuse_friend", "friend_id": friend_id}
+        self.sockCom_ins.send(str(data).encode())
+
+        recv_raw = self.sockCom_ins.recv()
+        if recv_raw == b"1":
+            return 1
+        else:
+            return 0
         
-
-
     def send_message(self, friend_id, msg):
         data = {"mode": "send_msg", "friend_id": friend_id, "msg": msg}
         self.sockCom_ins.send(str(data).encode())
@@ -131,3 +140,8 @@ class logicProc:
             return 0
         else:
             return eval(recv_raw)
+
+
+    def close_sock(self):
+        self.sockCom_ins.send(str({"mode": "close_sock"}).encode())
+        del self.sockCom_ins

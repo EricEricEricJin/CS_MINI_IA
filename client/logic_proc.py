@@ -26,6 +26,7 @@ class logicProc:
         data = {"mode": "sign_up", "name": user_name, "pwd": passwd}
         self.sockCom_ins.send(str(data).encode())
         recv_raw = self.sockCom_ins.recv()
+        print(recv_raw)
         
         if recv_raw == b"0":
             # failed
@@ -54,6 +55,7 @@ class logicProc:
             self.dbOp_ins = dbOp("user_{}.db".format(self.user_id))
             self.dbOp_ins.create_msgtable()
             
+            print(self.login_status == True)
             return 1
 
     def sign_out(self):

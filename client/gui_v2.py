@@ -73,6 +73,10 @@ class GUI:
         # Login / logout button
         self.loginout_bt = Button(master = self.root, text = "Login in", command = self._loginout_bt_clicked)
         self.loginout_bt.place(x = 3 * self.BUTTON_W, y = 0)
+
+        # signup
+        self.signup_bt = Button(master = self.root, text = "Sign up", command = self._signup_bt_clicked)
+        self.signup_bt.place(x = 4 * self.BUTTON_W, y = 0)
         
         # erase selected history button
         self.clear_selected_history_bt = Button(master = self.root, text = "Clear history", command = self._clear_selected_history_bt_clicked)
@@ -98,29 +102,29 @@ class GUI:
             self.id2item_friend_treeview_table
         )
 
+        if self.logic_proc_ins.login_status == True:
+            data = self.logic_proc_ins.refresh()
+            if data != 0:
+                print("data", data)
 
-        data = self.logic_proc_ins.refresh()
-        if data != 0:
-            print("data", data)
+            # Interprete data
+            # {"msg": [[sender, send_t, msg], [], ...], "freq": [[friend_id, req_note], [], ...], "friend": [[friend_id, friend_username, login_status], [], ...]}
 
-        # Interprete data
-        # {"msg": [[sender, send_t, msg], [], ...], "freq": [[friend_id, req_note], [], ...], "friend": [[friend_id, friend_username, login_status], [], ...]}
+                self.msg_list = data["msg"]
+                self.friend_list = data["friend"]
+                self.friend_req_list = data["freq"]
 
-            self.msg_list = data["msg"]
-            self.friend_list = data["friend"]
-            self.friend_req_list = data["freq"]
+                if (self.selected_fri_id not in self.msg_list) and (self.selected_fri_id != None):
+                    print("msglist add", self.selected_fri_id)
+                    self.msg_list.update({self.selected_fri_id: []})
 
-            if (self.selected_fri_id not in self.msg_list) and (self.selected_fri_id != None):
-                print("msglist add", self.selected_fri_id)
-                self.msg_list.update({self.selected_fri_id: []})
+                self._refresh_friend_treeview()
+                if self.selected_fri_id != None:
+                    self._refresh_msgbox(self.selected_fri_id)
 
-            self._refresh_friend_treeview()
-            if self.selected_fri_id != None:
-                self._refresh_msgbox(self.selected_fri_id)
-
-        
+            
         self.root.after(1000, self._refresh)
-        
+            
     def _loginout_bt_clicked(self):
         if self.logic_proc_ins.login_status == ONLINE:
             self.logic_proc_ins.sign_out()
@@ -178,6 +182,57 @@ class GUI:
 
             Button(top, text = "CANCEL", command = _cancel).place(x = 0, y = int(LOGINOUT_WIN_H / 3 * 2))
             Button(top, text = "LOGIN", command = _login).place(x = int(LOGINOUT_WIN_W / 2), y = int(LOGINOUT_WIN_H / 3 * 2))
+
+    def _signup_bt_clicked(self):
+        SIGNUP_WIN_W = 200
+        SIGNUP_WIN_H = 150
+
+        top = Toplevel()
+        top.geometry("{}x{}".format(SIGNUP_WIN_W, SIGNUP_WIN_H))
+
+        Label(top, text = "User name").place(x = 0, y = 0)
+        Label(top, text = "Passwd").place(x = 0, y = int(SIGNUP_WIN_H / 3))
+
+        un_ent = Entry(top, width = 20)
+        un_ent.place(x = int(SIGNUP_WIN_W / 2), y = 0)
+
+        pwd_ent = Entry(top, width = 20)
+        pwd_ent.place(x = int(SIGNUP_WIN_W / 2), y = int(SIGNUP_WIN_H / 3))
+
+        def _cancel():
+            top.destroy()
+
+        def _signup():
+            
+            un = un_ent.get()
+            pwd = pwd_ent.get()
+
+            try:
+                if 0 < len(un) <= 50 and 0 < len(pwd) <= 50:
+                    # valid
+                    rt = self.logic_proc_ins.sign_up(un, pwd)
+                    if rt == 0:
+                        raise(Exception("fail"))
+                    else:
+                        success = Toplevel()
+                        Message(success, text = "Success").pack()
+                        Message(success, text = "Your ID is: {}".format(int(rt))).pack()
+                        def destroy_success():
+                            success.destroy()
+                            top.destroy()
+                        Button(success, text = "OK", command = destroy_success).pack() 
+                        
+                else:
+                    raise(Exception("invalid_input"))
+            except Exception as e:
+                warning = Toplevel()
+                Message(warning, text = e).pack()
+                def destroy_warning():
+                    warning.destroy()
+                Button(warning, text = "OK", command = destroy_warning).pack()
+                
+        Button(top, text = "CANCEL", command = _cancel).place(x = 0, y = int(SIGNUP_WIN_H / 3 * 2))
+        Button(top, text = "SIGNUP", command = _signup).place(x = int(SIGNUP_WIN_W / 2), y = int(SIGNUP_WIN_H / 3 * 2))
 
     def _friend_treeview_select_change(self, event):
         # update selected

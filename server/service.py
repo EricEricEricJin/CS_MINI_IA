@@ -1,6 +1,7 @@
 from db_op import dbOp
 from threading import Thread
 from functools import wraps
+import time
 
 def debug(f):
     @wraps(f)
@@ -27,7 +28,7 @@ class Service:
             "refuse_friend": self._refuse_friend,
             "send_msg": self._send_msg,
             "refresh": self._refresh,
-            "close_sock": self._close_sock,
+            "close_sock": self._close_sock
         }
 
         self.recv_decoded = {}
@@ -47,6 +48,7 @@ class Service:
         while self.do_serve:
             try:
                 recv_raw = self.sock_conn.recv(4096)
+                print("recv_raw", recv_raw)
                 try:
                     self.recv_decoded = eval(recv_raw.decode())
                 except Exception as e:
@@ -54,18 +56,25 @@ class Service:
 
                 mode = self.recv_decoded["mode"]
 
-                if (mode in self.MODE2FUNC) and (mode == "sign_in" or self.login_status):
+                if (mode in self.MODE2FUNC) and (mode == "sign_in" or self.login_status or mode == "sign_up"):
                     self.MODE2FUNC[mode]()
+                    print("run_with_mode_dict")
+                    
                 else:
                     self.sock_conn.send(b"0")
+                    print("can't run")
             except:
                 break 
 
+        self._sign_out()
+        time.sleep(0.2)
         self.sock_conn.close()
+        
         del self.db_op_ins
 
     @debug
     def _sign_up(self):
+        print("enter func sign_up")
         try:
             user_name = self.recv_decoded["name"]
             password = self.recv_decoded["pwd"]
@@ -119,7 +128,10 @@ class Service:
             self.sock_conn.send(b"1")
             return 1
         except:
-            self.sock_conn.send(b"0")
+            try:
+                self.sock_conn.send(b"0")
+            except:
+                pass
             return 0
 
     @debug

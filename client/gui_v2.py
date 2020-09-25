@@ -1,7 +1,7 @@
 from tkinter import *
 
-# from logic_proc import *
-from fake_logic_proc import *
+from logic_proc import *
+# from fake_logic_proc import *
 
 from tkinter.ttk import *
 
@@ -22,6 +22,9 @@ class GUI:
         self.friend_req_list = {} # {id: req_note, ...}
 
         self.id2item_friend_treeview_table = {}
+
+        self.selected_fri_id = None
+
 
         self.root = Tk()
         self.root.geometry("{}x{}".format(w, h))
@@ -80,25 +83,48 @@ class GUI:
         self.send_bt.place(x = self.w - self.BUTTON_W, y = self.h - self.BUTTON_H)
 
     def run(self):
-        self.root.after(20, self._refresh)
+        self.logic_proc_ins.connect()
+        self.root.after(50, self._refresh)
+        print("run")
         self.root.mainloop()
 
     def _refresh(self):
-        print("_refresh")
+
+        print(
+            self.msg_list,
+            self.friend_list,
+            self.friend_req_list,
+            self.selected_fri_id,
+            self.id2item_friend_treeview_table
+        )
+
+
         data = self.logic_proc_ins.refresh()
+        if data != 0:
+            print("data", data)
 
         # Interprete data
         # {"msg": [[sender, send_t, msg], [], ...], "freq": [[friend_id, req_note], [], ...], "friend": [[friend_id, friend_username, login_status], [], ...]}
 
-        self.msg_list = data["msg"]
-        self.friend_list = data["friend"]
-        self.friend_req_list = data["freq"]
+            self.msg_list = data["msg"]
+            self.friend_list = data["friend"]
+            self.friend_req_list = data["freq"]
 
-        self._refresh_friend_treeview()
+            if (self.selected_fri_id not in self.msg_list) and (self.selected_fri_id != None):
+                print("msglist add", self.selected_fri_id)
+                self.msg_list.update({self.selected_fri_id: []})
+
+            self._refresh_friend_treeview()
+            if self.selected_fri_id != None:
+                self._refresh_msgbox(self.selected_fri_id)
+
+        
+        self.root.after(1000, self._refresh)
         
     def _loginout_bt_clicked(self):
         if self.logic_proc_ins.login_status == ONLINE:
             self.logic_proc_ins.sign_out()
+            
         else:
             LOGINOUT_WIN_W = 200
             LOGINOUT_WIN_H = 150
@@ -159,12 +185,14 @@ class GUI:
         sel_friend_id = self.friend_treeview.item(selected)["values"][0]
 
         self._refresh_msgbox(friend_id = sel_friend_id)
+        self.selected_fri_id = sel_friend_id
 
     def _refresh_msgbox(self, friend_id):
-        msg = self.msg_list[friend_id]
-        self.display_msg_box.delete("1.0", "end")
-        for i in range(len(msg)):
-            self.display_msg_box.insert(END, str(msg[i]))
+        if friend_id in self.msg_list:
+            msg = self.msg_list[friend_id]
+            self.display_msg_box.delete("1.0", "end")
+            for i in range(len(msg)):
+                self.display_msg_box.insert(END, str(msg[i]) + "\n")
 
     def _refresh_friend_treeview(self):
         for item in (self.id2item_friend_treeview_table.values()):
@@ -173,6 +201,7 @@ class GUI:
         self.id2item_friend_treeview_table = {}
         for i in range(len(self.msg_list)):
             fri_id = list(self.msg_list.keys())[i]
+            print(fri_id)
             fri_name = self.friend_list[fri_id][0]
 
             item = self.friend_treeview.insert("", "end", values = [
@@ -180,6 +209,8 @@ class GUI:
                 ]
             )
             self.id2item_friend_treeview_table.update({fri_id: item})
+        if self.selected_fri_id in self.id2item_friend_treeview_table:
+            self.friend_treeview.selection_set(self.id2item_friend_treeview_table[self.selected_fri_id])
 
     def _view_all_friends_bt_clicked(self):
         AF_WIN_W = int(self.w / 2)
@@ -187,6 +218,7 @@ class GUI:
 
         def _selected_friend_id():
             iid = all_friends_tree.selection()[0]
+            # print(all_friends_tree.item(iid)["values"][0])
             return all_friends_tree.item(iid)["values"][0]
 
         def _all_friends_tree_select_change(event):
@@ -200,9 +232,22 @@ class GUI:
 
         def _send_msg():
             selected_fri_id = _selected_friend_id()
-            self.friend_treeview.selection_set(
-                self.id2item_friend_treeview_table[selected_fri_id]
-            )
+            try:
+                if selected_fri_id not in self.id2item_friend_treeview_table:
+                    item = self.friend_treeview.insert("", index = 0, values = [selected_fri_id, self.friend_list[selected_fri_id][0]])
+                    self.id2item_friend_treeview_table.update({selected_fri_id: item})
+                self.friend_treeview.selection_set(
+                    self.id2item_friend_treeview_table[selected_fri_id]
+                )
+                self.selected_fri_id =selected_fri_id
+
+                if selected_fri_id not in self.msg_list:
+                    print("msglist add", selected_fri_id)
+                    self.msg_list.update({selected_fri_id: []})
+ 
+            except Exception as e:
+                print(e, selected_fri_id)
+                pass
             return
 
         top = Toplevel()
@@ -243,6 +288,7 @@ class GUI:
         # self.logic_proc_ins.clear_history()
 
     def _send_bt_clicked(self):
+        self.logic_proc_ins.send_message(self.selected_fri_id, self.input_box.get())
       #   self.logic_proc_ins.send_message()
         pass
 

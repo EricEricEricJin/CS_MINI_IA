@@ -1,5 +1,6 @@
 from sock_com import sockCom
 from db_op import dbOp
+import datetime
 
 ONLINE = 1
 OFFLINE = 0
@@ -11,6 +12,7 @@ class logicProc:
         self.user_id = None
         
         self.sockCom_ins = sockCom()
+
 
 
     def connect(self):
@@ -48,6 +50,10 @@ class logicProc:
             self.user_name = recv_raw.decode()
             self.user_id = user_id
             self.login_status = ONLINE
+        
+            self.dbOp_ins = dbOp("user_{}.db".format(self.user_id))
+            self.dbOp_ins.create_msgtable()
+            
             return 1
 
     def sign_out(self):
@@ -64,6 +70,9 @@ class logicProc:
         if recv_raw == b"0":
             return 0
         else:
+            self.login_status = OFFLINE
+            self.user_id = None
+            self.user_name = None
             return 1
 
         pass
@@ -90,9 +99,11 @@ class logicProc:
         #     return 0
         data = {"mode": "del_friend", "friend_id": friend_id}
         self.sockCom_ins.send(str(data).encode())
+        
 
         recv_raw = self.sockCom_ins.recv()
         if recv_raw == b"1":
+            self.dbOp_ins.delete_msgtable(friend_id)
             return 1
         else:
             return 0
@@ -123,6 +134,7 @@ class logicProc:
         self.sockCom_ins.send(str(data).encode())
         recv_raw = self.sockCom_ins.recv()
         if recv_raw == b"1":
+            self.dbOp_ins.insert_msgtable(friend_id, 1, datetime.datetime.now(), msg)
             return 1
         else:
             return 0
@@ -136,10 +148,32 @@ class logicProc:
 
         self.sockCom_ins.send(str({"mode": "refresh"}).encode())
         recv_raw = self.sockCom_ins.recv()
+        # print("refresh done")
         if recv_raw == b"0":
             return 0
         else:
-            return eval(recv_raw)
+            data = eval(recv_raw)
+            msg = data["msg"]
+            for i in range(len(msg)):
+                sender_id = list(msg.keys())[i]
+
+                # msg[key] = [
+                   #  [], []
+                # ]
+                this_sender_id_msg = msg[sender_id]
+                
+                for j in range(len(this_sender_id_msg)):
+                    message = this_sender_id_msg[j][2]
+                    time = this_sender_id_msg[j][1]
+                    self.dbOp_ins.insert_msgtable(sender_id, 0, time, message)
+
+            msg = self.dbOp_ins.query_msgtable()
+            data["msg"] = msg
+
+            return data
+
+    def clear_history(self, friend_id):
+        self.dbOp_ins.delete_msgtable(friend_id)
 
 
     def close_sock(self):

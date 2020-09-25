@@ -1,7 +1,7 @@
 from socket import *
 from service import Service
 
-SERVER_ADDR = ("127.0.0.1", 1234)
+SERVER_ADDR = ("127.0.0.1", 2345)
 
 class Main:
     def __init__(self):

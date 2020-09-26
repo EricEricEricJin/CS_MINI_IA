@@ -4,6 +4,7 @@ from logic_proc import *
 # from fake_logic_proc import *
 
 from tkinter.ttk import *
+from tkinter.scrolledtext import ScrolledText
 
 
 class GUI:
@@ -50,7 +51,7 @@ class GUI:
         self.friend_treeview.configure(yscrollcommand = friend_tv_scrollbar.set)
 
         # Display text field
-        self.display_msg_box = Text(master = self.root, height = int(self.h - 2 * self.BUTTON_H), width = int(self.w / 4 * 3 - 10))
+        self.display_msg_box = ScrolledText(master = self.root, height = int((self.h - 2 * self.BUTTON_H) / 20), width = int((self.w / 4 * 3 - 10) / 10))        
         self.display_msg_box.place(x = int(self.w / 4 + 10), y = self.BUTTON_H)
 
         # Display input_box
@@ -71,7 +72,7 @@ class GUI:
         self.add_friend_bt.place(x = 2 * self.BUTTON_W, y = 0)
 
         # Login / logout button
-        self.loginout_bt = Button(master = self.root, text = "Login in", command = self._loginout_bt_clicked)
+        self.loginout_bt = Button(master = self.root, text = "Login", command = self._loginout_bt_clicked)
         self.loginout_bt.place(x = 3 * self.BUTTON_W, y = 0)
 
         # signup
@@ -127,7 +128,16 @@ class GUI:
             
     def _loginout_bt_clicked(self):
         if self.logic_proc_ins.login_status == ONLINE:
-            self.logic_proc_ins.sign_out()
+            rt = self.logic_proc_ins.sign_out()
+            if rt != 1:
+                warning = Toplevel()
+                Message(warning, text = "Fail to log out!").pack()
+                Button(warning, text = 'OK', command = warning.destroy).pack()
+            else:
+                self.loginout_bt["text"] = "Login "
+                self.msg_list = {}
+                self.friend_list = {}
+                self.friend_req_list = {}
             
         else:
             LOGINOUT_WIN_W = 200
@@ -177,6 +187,7 @@ class GUI:
                     Button(warning, text = "OK", command = destroy_warning_1).pack()
                     return
                 else:
+                    self.loginout_bt["text"] = "Logout"
                     top.destroy()
                 
 
@@ -243,11 +254,22 @@ class GUI:
         self.selected_fri_id = sel_friend_id
 
     def _refresh_msgbox(self, friend_id):
+        def _format_msgoutput(raw_msg):
+            fmted_msg = ""
+            for i in range(len(raw_msg)):
+                fmted_msg += raw_msg[i][1]
+                fmted_msg += "\n"
+                if raw_msg[i][0] == 1:
+                    fmted_msg += "Me: "
+                else:
+                    fmted_msg += "Friend: "
+                fmted_msg += raw_msg[i][2]
+                fmted_msg += "\n\n" 
+            return fmted_msg
         if friend_id in self.msg_list:
             msg = self.msg_list[friend_id]
             self.display_msg_box.delete("1.0", "end")
-            for i in range(len(msg)):
-                self.display_msg_box.insert(END, str(msg[i]) + "\n")
+            self.display_msg_box.insert(END, _format_msgoutput(msg))
 
     def _refresh_friend_treeview(self):
         for item in (self.id2item_friend_treeview_table.values()):
@@ -344,6 +366,7 @@ class GUI:
 
     def _send_bt_clicked(self):
         self.logic_proc_ins.send_message(self.selected_fri_id, self.input_box.get())
+        self.input_box.delete(0, END)
       #   self.logic_proc_ins.send_message()
         pass
 

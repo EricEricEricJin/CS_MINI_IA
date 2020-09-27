@@ -3,6 +3,113 @@ DECLARE insert_allusertable(user_id, user_name, passwd, login_status) <- FUNC
      INTO AUT Table
 ENDFUNC
 
+
 DECLARE get_max_userid(user_id) <- FUNC
     DECLARE max_id: INT
+    max_id <- SELECT MAX(ID) FROM AUT Table
+    RETURN max_id
+ENDFUNC
+
+
+DECLARE delete_allusertable(user_id) <- FUNC
+    DELETE AUT Table WHERE ID = user_id
+ENDFUNC
+
+
+DECLARE update_allusertable(user_id, item, val) <- FUNC
+    UPDATE AUT Table item = val where ID = user_id 
+ENDFUNC
+
+
+DECLARE query_allusertable(user_id) <- FUNC
+    DECLARE user_name: STRING
+    DECLARE passwd: STRING
+    DECLARE login_status: BOOL
+    DECLARE data" ARRAY
+
+    data <- SELECT USERNAME, PASSWD, LOGIN_STATUS WHERE ID = user_id
+    user_name <- data.user_name
+    passwd <- data.passwd
+    login_status <- data.login_status
+
+    RETURN user_name, passwd, login_status
+ENDFUNC
+
+
+DECLARE create_msgtable(user_id) <- FUNC
+    CREATE Table "MSG" + TOSTRING(user_id) \
+        SENDER_ID, TIME, MSG
+ENDFUNC
+
+
+DECLARE insert_msgtable(user_id, sender_id, msg) <- FUNC
+    INSERT INTO "MSG" + TOSTRING(user_id) \
+        sender_id, CURRENT_TIME, msg
+ENDFUNC
+
+
+DECLARE query_msgtable(user_id) <- FUNC
+    DECLARE data: ARRAY
+    DECLARE sender_id: INT
+    DECLARE time: TIMESTAMP
+    DECLARE msg: STRING
+
+    data = SELECT sender_id, time, msg FROM MSH + TOSTRING(user_id)
+    sender_id <- data.sender_id
+    time <- data.time
+    msg <- data.msg
+
+    RETURN sender_id, time, msg
+ENDFUNC
+
+
+DECLARE erase_msgtable(user_id) <- FUNC
+    DELETE Table "MSG" + TOSTRING(user_id)
+ENDFUNC
+
+
+DECLARE create_friendlisttable(user_id) <- FUNC
+    CREATE Table "FL" + TOSTRING(user_id) \
+        FRI_ID
+ENDFUNC
+
+
+DECLARE insert_friendlisttable(user_id, friend_id) <- FUNC
+    INSERT INTO Table "FL" + TOSTRING(user_id) \
+        friend_id 
+ENDFUNC
+
+
+DECLARE query_friendlisttable(user_id) <- FUNC
+    DECLARE friend_list: ARRAY
+    friend_list <- SELECT FROM Table "FL" + TOSTRING(user_id)
+    RETURN friend_list
+ENDFUNC
+
+
+DECLARE delete_friendlisttable(user_id, friend_id) <- FUNC
+    DELETE FROM Table "FL" + TOSTRING(user_id) WHERE ID = friend_id
+ENDFUNC
+
+
+DECLARE create_friendrequesttable(user_id) <- FUNC
+    CREATE Table "FR" + TOSTRING(user_id) \
+        FRI_ID, REQ_NOTE
+ENDFUNC
+
+
+DECLARE insert_friendrequesttable(user_id, friend_id, req_note) <- FUNC
+    INSERT INTO Table "FR" + TOSTRING(user_id) friend_id, req_note
+ENDFUNC
+
+
+DECLARE query_friendrequesttable(user_id) <- FUNC
+    DECLARE friend_req: ARRAY
+    friend_req <- SELECT FRI_ID, REQ_NOTE FROM Table "FL" + TOSTRING(user_id)
+    RETURN friend_req
+ENDFUNC
+
+
+DECLARE delete_friendrequesttable(user_id, friend_id) <- FUNC
+    DELETE "FR" + TOSTRING(user_id) WHERE FRI_ID = friend_id
 ENDFUNC

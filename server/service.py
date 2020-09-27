@@ -1,3 +1,13 @@
+'''
+@File       :   service.py
+@Time       :   9/27/2020
+@Author     :   Eric Jin
+@Version    :   2.0
+@Contact    :   jyseric@126.com
+@License    :   WTFPL
+'''
+
+
 from db_op import dbOp
 from threading import Thread
 from functools import wraps

@@ -1,3 +1,13 @@
+'''
+@File       :   gui_v2.py
+@Time       :   9/27/2020
+@Author     :   Eric Jin
+@Version    :   2.0
+@Contact    :   jyseric@126.com
+@License    :   WTFPL
+'''
+
+
 from tkinter import *
 from logic_proc import *
 # from fake_logic_proc import *

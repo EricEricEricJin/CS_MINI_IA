@@ -1,3 +1,13 @@
+'''
+@File       :   db_op.py
+@Time       :   9/27/2020
+@Author     :   Eric Jin
+@Version    :   2.0
+@Contact    :   jyseric@126.com
+@License    :   WTFPL
+'''
+
+
 # MSG
 # FRIEND_LIST
 # FRIEND_REQUEST
@@ -11,6 +21,7 @@
 #   Friend_id, req_note
 
 import sqlite3
+
 
 class dbOp:
     def __init__(self, db_path):
@@ -58,7 +69,8 @@ class dbOp:
             Delete all messages sent by sender_id
         """
         try:
-            self.cursor.execute("DELETE from MSG where FRIEND_ID = {}".format(friend_id))
+            self.cursor.execute(
+                "DELETE from MSG where FRIEND_ID = {}".format(friend_id))
             self.conn.commit()
             return 1
         except:
@@ -67,7 +79,8 @@ class dbOp:
 
     def query_msgtable(self):
         try:
-            data = self.cursor.execute("SELECT FRIEND_ID, IMSENDER, TIME, MSG from MSG")
+            data = self.cursor.execute(
+                "SELECT FRIEND_ID, IMSENDER, TIME, MSG from MSG")
             msg_dict = {}
             for row in data:
                 if row[0] in msg_dict:

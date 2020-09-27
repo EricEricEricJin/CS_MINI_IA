@@ -1,0 +1,107 @@
+DECLARE connect() <- FUNC
+    CONNECT TO SERVER
+ENDFUNC
+
+DECLARE sign_up() <- FUNC
+    DECLARE user_name: STRING
+    DECLARE passwd: STRING
+    user_name <- INPUT "Input username"
+    passwd <- INPUT "Input password"
+    SEND (
+        "mode": "sign_up",
+        "name": user_name,
+        "pwd": passwd
+    )
+ENDFUNC
+
+DECLARE sign_in() <- FUNC
+    DECLARE user_id: INT
+    DECLARE passwd: STRING
+    DECLARE user_name: STRING
+    user_id <- INPUT "Input id"
+    passwd <- INPUT "Input passwd"
+    SEND (
+        "mode": "sign_in",
+        "id": user_id,
+        "passwd": passwd
+    )
+    user_name <- RECEIVE
+    GLOBAL.LOGIN_STATUS <- ONLINE
+    RETURN user_name
+ENDFUNC
+
+DECLARE sign_out() <- FUNC
+    SEND ("mode" <- "sign_out")
+    GLOBAL.LOGIN_STATUS <- OFFLINE
+ENDFUNC
+
+DECLARE add_friend() <- FUNC
+    DECLARE friend_id: INT
+    DECLARE req_note: STRING
+    friend_id <- INPUT "friend id"
+    req_note <- "request note"
+    SEND (
+        "mode": "add_friend",
+        "friend_id": friend_id,
+        "req_note": req_note
+    )
+ENDFUNC
+
+DECLARE del_friend() <- FUNC
+    DECLARE friend_id
+    friend_id <- INPUT "friend id"
+    SEND (
+        "mode": "del_friend",
+        "friend_id": friend_id
+    )
+ENDFUNC
+
+DECLARE accept_friend() <- FUNC
+    DECLARE friend_id: INT
+    friend_id <- INPUT "friend id"
+    SEND (
+        "mode": "accept_friend",
+        "friend_id": friend_id
+    )
+ENDFUNC
+
+DECLARE refuse_friend() <- FUNC
+    DECLARE friend_id: INT
+    friend_id <- INPUT "friend id"
+    SEND (
+        "mode": "refuse_friend",
+        "friend_id": "friend_id"
+    )
+ENDFUNC
+
+DECLARE send_message() <- FUNC
+    DECLARE friend_id: INT
+    DECLARE message: STRING
+    friend_id <- INPUT "friend id"
+    message <- INPUT "message"
+    SEND (
+        "mode": "send_msg",
+        "friend_id": friend_id,
+        "msg": msg
+    )
+    insert_msgtable(friend_id, 1, CURRENT_TIME)
+ENDFUNC
+
+DECLARE refresh() <- FUNC
+    DECLARE data_remote: DICT
+    DECLARE data_local: DICT
+    SEND ("mode": "refresh")
+    data_remote <- RECEIVE
+    data_local <- query_msgtable()
+    RETURN COMBINE(data_remote, data_local)
+ENDFUNC
+
+DECLARE clear_history() <- FUNC
+    DECLARE friend_id
+    friend_id <- INPUT "friend id"
+    delete_msgtable(friend_id)
+ENDFUNC
+
+DECLARE close_sock() <- FUNC
+    CLOSE CONNECTION
+ENDFUNC

@@ -15,8 +15,9 @@ class logicProc:
 
 
 
-    def connect(self):
-        self.sockCom_ins.connect()
+    def connect(self, server_addr):
+        rt = self.sockCom_ins.connect(server_addr)
+        return rt
 
     def sign_up(self, user_name, passwd):
         # if success:

@@ -1,0 +1,6 @@
+PROC refuse_friend
+    DECLARE user_id: INT
+    DECLARE friend_id: INT
+
+    delete_friendrequesttable(user_id, friend_id)
+ENDPROC

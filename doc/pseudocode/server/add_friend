@@ -1,0 +1,11 @@
+PROC add_friend
+    DECLARE user_id: INT
+    DECLARE friend_id: INT
+    DECLARE request_note: INT
+
+    user_id <- INPUT
+    friend_id <- INPUT
+    request_note <- INPUT
+
+    insert_friendrequesttable(user_id, friend_id, request_note)
+ENDPROC

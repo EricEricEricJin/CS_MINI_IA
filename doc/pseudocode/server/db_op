@@ -1,0 +1,8 @@
+DECLARE insert_allusertable(user_id, user_name, passwd, login_status) <- FUNC
+    INSERT user_id, user_name, passwd, login_status \
+     INTO AUT Table
+ENDFUNC
+
+DECLARE get_max_userid(user_id) <- FUNC
+    DECLARE max_id: INT
+ENDFUNC

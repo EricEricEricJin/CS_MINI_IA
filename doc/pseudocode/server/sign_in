@@ -1,0 +1,15 @@
+PROC sign_in
+    DECLARE password: STRING
+    DECLARE id: INT
+
+    password <- INPUT
+    id <- INPUT
+
+    IF password == query_allusertable(id).password THEN
+        SEND (query_allusertable(id).username)
+        GLOBAL.isLogIn <- TRUE
+        GLOBAL.user_id <- id
+    ELSE
+        SEND 0
+    ENDIF
+END_PROC

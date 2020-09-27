@@ -1,0 +1,20 @@
+DECLAR create_mgtable() = FUNC
+    CREATE TABLE
+        FRIEND_ID INT NOT NULL,
+        IMSENDER BOOL NOT NULL,
+        TIME TIMESTAMP NOT NULL,
+        MSG TEXT NOT NULL
+ENDFUNC
+
+DECLARE insert_msgtable(friend_id, imsender, time, msg) = FUNC
+    INSERT friend_id, imsender, time, msg INTO MSG
+ENDFUNC
+
+DECLARE delete_msgtable(friend_id) = FUNC
+    DELETE where FRIEND_ID = friend_id
+ENDFUNC
+
+DECLARE query_msgtable() = FUNC
+    data = SELECT FRIEND_ID, IMSENDER, TIME, MSG
+    RETURN data
+ENDFUNC

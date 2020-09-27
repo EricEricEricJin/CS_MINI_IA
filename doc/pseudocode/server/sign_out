@@ -1,0 +1,6 @@
+PROC sign_out
+    DECLARE id: INT
+    id <- INPUT
+    update_allusertable(id, "LOGIN_STATUS", 0)
+    SEND 1
+ENDPROC

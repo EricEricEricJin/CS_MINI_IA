@@ -1,11 +1,9 @@
 from tkinter import *
-
 from logic_proc import *
 # from fake_logic_proc import *
 
 from tkinter.ttk import *
 from tkinter.scrolledtext import ScrolledText
-
 
 class GUI:
 
@@ -17,15 +15,10 @@ class GUI:
         self.h = h
 
         self.msg_list = {} # {id: [sender, time, msg], ...}
-
         self.friend_list = {} # {id: [username, login_status], ...}
-
         self.friend_req_list = {} # {id: req_note, ...}
-
         self.id2item_friend_treeview_table = {}
-
         self.selected_fri_id = None
-
 
         self.root = Tk()
         self.root.geometry("{}x{}".format(w, h))
@@ -45,9 +38,9 @@ class GUI:
         self.friend_treeview.bind("<<TreeviewSelect>>", self._friend_treeview_select_change)
         
         # Scrollbar for friend treeview
-        friend_tv_scrollbar = Scrollbar(master = self.root)
-        friend_tv_scrollbar.place(x = int(self.w / 4), y = self.BUTTON_H, height = self.h - self.BUTTON_H, width = 10)
-        friend_tv_scrollbar.config(command = self.friend_treeview.yview)
+        friend_tv_scrollbar = Scrollbar(master = self.root, orient = "vertical", command = self.friend_treeview.yview)
+        friend_tv_scrollbar.place(x = int(self.w / 4), y = self.BUTTON_H)
+        # friend_tv_scrollbar.config(command = self.friend_treeview.yview)
         self.friend_treeview.configure(yscrollcommand = friend_tv_scrollbar.set)
 
         # Display text field
@@ -57,7 +50,6 @@ class GUI:
         # Display input_box
         self.input_box = Entry(master = self.root, width = int((self.w * (3 / 4) - 10 - 3 * self.BUTTON_W) / 18))
         self.input_box.place(x = int(self.w / 4 + 10 + 2 * self.BUTTON_W), y = self.h - self.BUTTON_H)
-
 
         # View all friends button
         self.view_all_friends_bt = Button(master = self.root, text = "All friends", command = self._view_all_friends_bt_clicked)
@@ -88,28 +80,40 @@ class GUI:
         self.send_bt.place(x = self.w - self.BUTTON_W, y = self.h - self.BUTTON_H)
 
     def run(self):
-        self.logic_proc_ins.connect()
+        try:
+            with open("client.config", "r") as f:
+                data = f.read()
+                data = data.split("\n")
+                data = [data[i].split(":") for i in range(len(data))]
+                for i in range(len(data)):
+                    if data[i][0] == "SERVER_ADDR":
+                        server_addr = data[i][1]
+                        break
+                else:
+                    raise(Exception)
+        except:
+            self._pop_top_window(200, 200, ["Fail to load config file!", "Check your client.config file!"], command = self.root.destroy)
+
+        conn_rt = self.logic_proc_ins.connect(server_addr)
+        if conn_rt == 0:
+            self._pop_top_window(200, 200, ["Fail to connect to server!", "Server address is {}".format(server_addr)], command = self.root.destroy)
         self.root.after(50, self._refresh)
         print("run")
         self.root.mainloop()
 
     def _refresh(self):
-
-        print(
-            self.msg_list,
-            self.friend_list,
-            self.friend_req_list,
-            self.selected_fri_id,
-            self.id2item_friend_treeview_table
-        )
+        # print(
+        #     self.msg_list,
+        #     self.friend_list,
+        #     self.friend_req_list,
+        #     self.selected_fri_id,
+        #     self.id2item_friend_treeview_table
+        # )
 
         if self.logic_proc_ins.login_status == True:
             data = self.logic_proc_ins.refresh()
             if data != 0:
-                print("data", data)
-
-            # Interprete data
-            # {"msg": [[sender, send_t, msg], [], ...], "freq": [[friend_id, req_note], [], ...], "friend": [[friend_id, friend_username, login_status], [], ...]}
+                # print("data", data)
 
                 self.msg_list = data["msg"]
                 self.friend_list = data["friend"]
@@ -123,7 +127,6 @@ class GUI:
                 if self.selected_fri_id != None:
                     self._refresh_msgbox(self.selected_fri_id)
 
-            
         self.root.after(1000, self._refresh)
             
     def _loginout_bt_clicked(self):
@@ -190,7 +193,6 @@ class GUI:
                     self.loginout_bt["text"] = "Logout"
                     top.destroy()
                 
-
             Button(top, text = "CANCEL", command = _cancel).place(x = 0, y = int(LOGINOUT_WIN_H / 3 * 2))
             Button(top, text = "LOGIN", command = _login).place(x = int(LOGINOUT_WIN_W / 2), y = int(LOGINOUT_WIN_H / 3 * 2))
 
@@ -270,6 +272,7 @@ class GUI:
             msg = self.msg_list[friend_id]
             self.display_msg_box.delete("1.0", "end")
             self.display_msg_box.insert(END, _format_msgoutput(msg))
+        self.display_msg_box.see(END)
 
     def _refresh_friend_treeview(self):
         for item in (self.id2item_friend_treeview_table.values()):
@@ -279,13 +282,14 @@ class GUI:
         for i in range(len(self.msg_list)):
             fri_id = list(self.msg_list.keys())[i]
             print(fri_id)
-            fri_name = self.friend_list[fri_id][0]
+            if fri_id in self.friend_list:
+                fri_name = self.friend_list[fri_id][0]
 
-            item = self.friend_treeview.insert("", "end", values = [
-                    fri_id, fri_name
-                ]
-            )
-            self.id2item_friend_treeview_table.update({fri_id: item})
+                item = self.friend_treeview.insert("", "end", values = [
+                        fri_id, fri_name
+                    ]
+                )
+                self.id2item_friend_treeview_table.update({fri_id: item})
         if self.selected_fri_id in self.id2item_friend_treeview_table:
             self.friend_treeview.selection_set(self.id2item_friend_treeview_table[self.selected_fri_id])
 
@@ -429,7 +433,6 @@ class GUI:
             Button(confirm_msgbox, text = "Accept", command = _accept).pack()
             Button(confirm_msgbox, text = "Refuse", command = _refuse).pack()
 
-
         friend_req_tree.bind("<<TreeviewSelect>>", _select_react)
 
     def _add_friend_bt_clicked(self):
@@ -446,7 +449,6 @@ class GUI:
 
         req_note_ent = Entry(master = top, width = 20)
         req_note_ent.place(x = int(ADDF_WIN_W / 2), y = int(ADDF_WIN_H / 3))
-
 
         def _cancel():
             top.destroy()
@@ -482,6 +484,18 @@ class GUI:
 
         Button(top, text = "Cancel", command = _cancel).place(x = 0, y = int(ADDF_WIN_H / 3 * 2))
         Button(top, text = "Add", command = _add).place(x = int(ADDF_WIN_W / 2), y = int(ADDF_WIN_H / 3 * 2))
+    
+    def _pop_top_window(self, width, height, messages, command = None):
+        def _clicked():
+            if command != None:
+                print("command")
+                command()
+            top.destroy() 
+        top = Toplevel()
+        top.geometry("{}x{}".format(width, height))
+        for msg in messages:
+            Message(top, text = msg).pack()
+        Button(top, text = "OK", command = _clicked).pack()
 
 if __name__ == "__main__":
     GUI_ins = GUI(1200, 800)

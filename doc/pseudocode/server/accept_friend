@@ -1,0 +1,11 @@
+PROC accept_friend
+    DECLARE user_id: INT
+    DECLARE friend_id: INT
+
+    user_id <- INPUT
+    friend_id <- INPUT
+
+    insert_friendlisttable(friend_id, user_id)
+    insert_friendlisttable(friend_id, user_id)
+    delete_friendrequesttable(user_id, friend_id)
+ENDPROC

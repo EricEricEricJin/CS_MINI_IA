@@ -1,0 +1,10 @@
+PROC del_friend
+    DECLARE user_id: INT
+    DECLARE friend_id: INT
+
+    user_id <- INPUT
+    friend_id <- INPUT
+
+    delete_friendlisttable(user_id, friend_id)
+    delete_friendlisttable(friend_id, user_id)
+END_PROC

@@ -1,0 +1,86 @@
+PROC GUI
+    DECLARE data
+    
+    DECLARE msg_list
+    DECLARE friend_list
+    DECLARE friend_req
+
+    SUBPROC react
+        IF LoginoutButtonClicked THEN
+            DECLARE id: INT
+            DECLARE pwd: STRING
+            WHILE Failed == TRUE
+                id <- INPUT "id"
+                pwd <- INPUT "pwd"
+                sign_in(id, pwd)
+                IF Failed THEN
+                    Pop Window Say "Fail"
+                ENDIF
+            ENDWHILE
+            
+        ELSE IF SignUpButtonClicked THEN
+            DECLARE user_name: STRING
+            DECLARE passwd: STRING
+            WHILE Failed == TRUE
+                user_name <- INPUT "user_name"
+                passwd <- INPUT "password"
+                sign_up(user_name, passwd)
+                IF Failed THEN
+                    Pop Window Say "Fail"
+                ENDIF
+            ENDWHILE
+
+        ELSE IF AllFriendButtonClicked THEN
+            Show All Friends
+            WHILE TRUE
+                IF SendMessageButtonClicked THEN
+                    SET selected friend in main window \
+                    to friend_id selected in top window
+                    BREAK
+                ELSE IF DeleteButtonClicked THEN
+                    del_friend(selected_friend_id)
+                    BREAK
+                ENDIF
+            ENDWHILE
+
+        ELSE IF AllRequestButtonClicked THEN
+            Show All FriendRequests
+            WHILE TRUE
+                IF AcceptButtonClicked THEN
+                    accept_friend(selected_friend_id)
+                    BREAK
+                ELSE IF RefuseButtonClicked THEN
+                    refuse_friend(SendButtonClicked)
+                    BREAK
+                ENDIF
+            ENDWHILE
+
+        ELSE IF AddFriendButtonClicked THEN
+            DECLARE friend_id: INT
+            DECLARE request_note: STRING
+            friend_id <- INPUT "friend id"
+            request_note <- INPUT "request note"
+            add_friend(selected_friend_id)
+
+        ELSE IF ClearHistoryButtonClicked THEN
+            clear_history(selected_friend_id)
+
+        ELSE IF SendButtonClicked THEN
+            DECLARE msg: STRING
+            msg <- INPUT(GetFromEntry)
+            send_message(selected_friend_id, msg)
+        ENDIF
+    ENDSUBPROC
+
+    SUBPROC refresh
+        data <- refresh()
+        friend_list <- data.friend
+        friend_req <- data.fri_req
+        msg <- data.msg
+        refresh window
+    ENDSUBPROC
+
+    CALL refresh IN NEW THREAD
+    CALL react
+ENDPROC
+

@@ -1,0 +1,40 @@
+PROC service
+    DECLARE mode: STRING
+
+    CONSTANT FUNC_TABLE <- {
+        "sign_up", "sign_in", "sign_out",
+        "add_friend", "delete_friend", "accept_friend", "refuse_friend",
+        "send_msg", "refuse_friend", "close_sock"
+    }
+    
+    WHILE TRUE
+
+        mode <- INPUT
+        
+        IF ((mode == "sign_in") or (mode == "sign_up") \
+         or (isLogIn)) and (mode in FUNC_TABLE) THEN
+        
+            IF mode == "sign_up" THEN
+                CALL sign_up
+            ELIF mode == "sign_in" THEN
+                CALL sign_in
+            ELIF mode == "sign_out" THEN
+                CALL sign_out
+            ELIF mode == "add_friend" THEN
+                CALL add_friend
+            ELIF mode == "delete_friend" THEN
+                CALL delete_friend
+            ELIF mode == "accept_friend" THEN
+                CALL accept_friend
+            ELIF mode == "refuse_friend" THEN
+                CALL refuse_friend
+            ELIF mode == "send_msg" THEN
+                CALL send_msg
+            ELIF mode == "refresh" THEN
+                CALL refuse_friend
+            ELIF mode == "close_sock" THEN
+                CLOSE CONNECTION
+                BREAK
+            ENDIF
+        ENDIF
+ENDPROC

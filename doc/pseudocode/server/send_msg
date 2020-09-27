@@ -1,0 +1,21 @@
+PROC send_msg
+    
+    DECLARE friend_id: INT
+    DECLARE msg: STRING
+    DECLARE user_id: INT
+    DECLARE time: TIMESTAMP
+    DECLARE all_user_id: ARRAY[INT]
+
+
+    friend_id <- INPUT
+    msg <- INPUT
+    user_id <- GLOBAL.user_id
+    time <- CURRENT_TIME
+
+    all_user_id <- query_friendlisttable(user_id)
+
+    IF friend_id in all_user_id THEN
+        insert_msgtable(friend_id, time, msg)
+    ENDIF
+
+ENDPROC

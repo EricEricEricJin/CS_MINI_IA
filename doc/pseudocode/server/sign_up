@@ -1,0 +1,19 @@
+PROC sign_up
+    DECLARE user_name: STRING
+    DECLARE password: STRING
+    DECLARE cur_max_id: INT
+    DECLARE id: INT
+
+    user_name <- INPUT
+    password <- INPUT
+
+    cur_max_id <- get_max_userid()
+    
+    IF cur_max_id == NULL THEN
+        id <- 1
+    ELSE
+        id <- cur_max_id + 1
+    ENIF
+
+    RETURN id
+ENDPROC

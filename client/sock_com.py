@@ -1,13 +1,16 @@
 from socket import * 
 
-SERVER_ADDR = ("127.0.0.1", 2345)
 
 class sockCom:
     def __init__(self):
         self.sock = socket(AF_INET, SOCK_STREAM)
 
-    def connect(self):
-        self.sock.connect(SERVER_ADDR)
+    def connect(self, server_addr):
+        try:
+            self.sock.connect(server_addr)
+            return 1
+        except:
+            return 0
 
     def send(self, bin_data):
         self.sock.send(bin_data)

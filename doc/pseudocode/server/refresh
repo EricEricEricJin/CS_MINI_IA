@@ -1,0 +1,14 @@
+PROC refresh
+    DECLARE user_id: INT
+    DECLARE message: ARRAY
+    DECLARE friend_req: ARRAY
+    DECLARE friends: ARRAY
+
+    user_id <- INPUT
+    message <- query_msgtable(user_id)
+    friend_req <- query_friendrequesttable(user_id)
+    friends <- query_friendlisttable(user_id)
+
+    SEND message, friend_req, friends
+
+ENDPROC

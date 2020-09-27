@@ -5,15 +5,14 @@ import datetime
 ONLINE = 1
 OFFLINE = 0
 
+
 class logicProc:
     def __init__(self):
         self.login_status = OFFLINE
         self.user_name = None
         self.user_id = None
-        
+
         self.sockCom_ins = sockCom()
-
-
 
     def connect(self, server_addr):
         rt = self.sockCom_ins.connect(server_addr)
@@ -28,7 +27,7 @@ class logicProc:
         self.sockCom_ins.send(str(data).encode())
         recv_raw = self.sockCom_ins.recv()
         print(recv_raw)
-        
+
         if recv_raw == b"0":
             # failed
             return 0
@@ -52,10 +51,10 @@ class logicProc:
             self.user_name = recv_raw.decode()
             self.user_id = user_id
             self.login_status = ONLINE
-        
+
             self.dbOp_ins = dbOp("user_{}.db".format(self.user_id))
             self.dbOp_ins.create_msgtable()
-            
+
             print(self.login_status == True)
             return 1
 
@@ -85,8 +84,9 @@ class logicProc:
         #     return 1
         # else:
         #     return 0
-        
-        data = {"mode": "add_friend", "friend_id": friend_id, "req_note": req_note}
+
+        data = {"mode": "add_friend",
+                "friend_id": friend_id, "req_note": req_note}
         self.sockCom_ins.send(str(data).encode())
         recv_raw = self.sockCom_ins.recv()
         if recv_raw == b"1":
@@ -102,7 +102,6 @@ class logicProc:
         #     return 0
         data = {"mode": "del_friend", "friend_id": friend_id}
         self.sockCom_ins.send(str(data).encode())
-        
 
         recv_raw = self.sockCom_ins.recv()
         if recv_raw == b"1":
@@ -131,13 +130,14 @@ class logicProc:
             return 1
         else:
             return 0
-        
+
     def send_message(self, friend_id, msg):
         data = {"mode": "send_msg", "friend_id": friend_id, "msg": msg}
         self.sockCom_ins.send(str(data).encode())
         recv_raw = self.sockCom_ins.recv()
         if recv_raw == b"1":
-            self.dbOp_ins.insert_msgtable(friend_id, 1, datetime.datetime.now(), msg)
+            self.dbOp_ins.insert_msgtable(
+                friend_id, 1, datetime.datetime.now(), msg)
             return 1
         else:
             return 0
@@ -147,7 +147,7 @@ class logicProc:
         # Fatch ALL from data base
         # return
         # {"msg": [[sender, send_t, msg], [], ...], "freq": [[friend_id, req_note], [], ...], "friend": [[friend_id, friend_username, login_status], [], ...]}
-        # 
+        #
 
         self.sockCom_ins.send(str({"mode": "refresh"}).encode())
         recv_raw = self.sockCom_ins.recv()
@@ -161,10 +161,10 @@ class logicProc:
                 sender_id = list(msg.keys())[i]
 
                 # msg[key] = [
-                   #  [], []
+                #  [], []
                 # ]
                 this_sender_id_msg = msg[sender_id]
-                
+
                 for j in range(len(this_sender_id_msg)):
                     message = this_sender_id_msg[j][2]
                     time = this_sender_id_msg[j][1]
@@ -177,7 +177,6 @@ class logicProc:
 
     def clear_history(self, friend_id):
         self.dbOp_ins.delete_msgtable(friend_id)
-
 
     def close_sock(self):
         self.sockCom_ins.send(str({"mode": "close_sock"}).encode())

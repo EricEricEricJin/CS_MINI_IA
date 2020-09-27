@@ -2,25 +2,25 @@ import sqlite3
 
 # DATABASE STRUCTURE
 # ALL_USER Table:
-#   ID INT PRIMARY KEY NOT NULL, 
+#   ID INT PRIMARY KEY NOT NULL,
 #   USERNAME TEXT NOT NULL,
-#   PASSWD CHAR(50) NOT NULL, 
-#   LOGIN_STATUS BOOLEAN NOT NULL, 
+#   PASSWD CHAR(50) NOT NULL,
+#   LOGIN_STATUS BOOLEAN NOT NULL,
 #
-# 
+#
 # MSG"USERID" Table:
 #   SENDER_ID INT, // IF NULL THEN USER IS THE SENDER
 #   TIME TimeStamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 #   MSG TEXT NOT NULL,
-#   
+#
 # FRIEND_LIST"USERID" Table:
 #   FRIEND_ID INT NOT NULL,
-# 
+#
 # FRIEND_REQUEST"USERID" Table:
 #   FRIEND_ID INT NOT NULL,
 #   REQ_NOTE TEXT,
 
-# TODO `TEXT` in DB do not support ' 
+# TODO `TEXT` in DB do not support '
 
 
 class dbOp:
@@ -65,14 +65,16 @@ class dbOp:
         self.conn.commit()
 
     def update_allusertable(self, user_id, item, val):
-        self.cursor.execute("UPDATE AUT set {} = {} where ID = {}".format(item, val, user_id))
+        self.cursor.execute(
+            "UPDATE AUT set {} = {} where ID = {}".format(item, val, user_id))
         self.conn.commit()
 
     def query_allusertable(self, user_id):
-        data = self.cursor.execute("SELECT USERNAME, PASSWD, LOGIN_STATUS from AUT where ID = {}".format(user_id))
+        data = self.cursor.execute(
+            "SELECT USERNAME, PASSWD, LOGIN_STATUS from AUT where ID = {}".format(user_id))
         for row in data:
             return {"USERNAME": row[0], "PASSWD": row[1], "LOGIN_STATUS": row[2]}
-    
+
     # ========== Message Table ==========
 
     def create_msgtable(self, user_id):
@@ -101,9 +103,10 @@ class dbOp:
 
     def query_msgtable(self, user_id):
         table_name = "MSG" + str(user_id)
-        
+
         data_list = []
-        data = self.cursor.execute("SELECT SENDER_ID, TIME, MSG from {}".format(table_name))
+        data = self.cursor.execute(
+            "SELECT SENDER_ID, TIME, MSG from {}".format(table_name))
         for row in data:
             data_list.append(
                 {"SENDER_ID": row[0], "TIME": row[1], "MSG": row[2]}
@@ -150,7 +153,8 @@ class dbOp:
 
     def delete_friendlisttable(self, user_id, friend_id):
         table_name = "FL" + str(user_id)
-        self.cursor.execute("DELETE from {} where FRI_ID = {}".format(table_name, friend_id))
+        self.cursor.execute(
+            "DELETE from {} where FRI_ID = {}".format(table_name, friend_id))
         self.conn.commit()
 
     # ========== Friend Request Table ==========
@@ -181,14 +185,16 @@ class dbOp:
     def query_friendrequesttable(self, user_id):
         table_name = "FR" + str(user_id)
         data_list = []
-        data = self.cursor.execute("SELECT FRI_ID, REQ_NOTE from {}".format(table_name))
+        data = self.cursor.execute(
+            "SELECT FRI_ID, REQ_NOTE from {}".format(table_name))
         for row in data:
             data_list.append({"FRI_ID": row[0], "REQ_NOTE": row[1]})
         return data_list
 
     def delete_friendrequesttable(self, user_id, friend_id):
         table_name = "FR" + str(user_id)
-        self.cursor.execute("DELETE from {} where FRI_ID = {}".format(table_name, friend_id))
+        self.cursor.execute(
+            "DELETE from {} where FRI_ID = {}".format(table_name, friend_id))
         self.conn.commit()
 
     def __del__(self):

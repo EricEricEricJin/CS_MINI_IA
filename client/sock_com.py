@@ -1,4 +1,4 @@
-from socket import * 
+from socket import *
 
 
 class sockCom:
@@ -6,8 +6,10 @@ class sockCom:
         self.sock = socket(AF_INET, SOCK_STREAM)
 
     def connect(self, server_addr):
+        print("Connect", server_addr)
         try:
             self.sock.connect(server_addr)
+            print("Can conn")
             return 1
         except:
             return 0
